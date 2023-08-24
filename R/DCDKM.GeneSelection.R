@@ -24,8 +24,6 @@ DCDKM.GeneSelection <- function(Mat1, Mat2 = NULL, Cond1type = NULL, Cond2type =
     stop("Error: no common genes between Mat1 and Mat2")
   }
 
-
-
   #### DEG analysis
   if(is.null(Mat2) | is.null(Cond1type) | is.null(Cond2type) ){
     message("DEG analysis is omitted.")
@@ -65,7 +63,7 @@ DCDKM.GeneSelection <- function(Mat1, Mat2 = NULL, Cond1type = NULL, Cond2type =
   }
   else{
     if(is.null(PPI)){
-      data(PPI)
+      data(PPI, package = "DynamicCancerDriverKM")
       aux1 <- PPI%>%
         dplyr::count(`Input-node Gene Symbol`)
       colnames(aux1) <- c("HGNC.symbol","nIn")
