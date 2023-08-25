@@ -18,21 +18,18 @@ DCDKM.BinTime <- function(Mat1, Mat2 = NULL, covariate, Features
     return(list(binnedGE = binned[,-1,drop=F], binTime = binned[,1,drop=F] ))
   }
 
-
   if (!require("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
-  if (!require("phenopath"))
+
+  if (!require("phenopath")){
     BiocManager::install("phenopath")
+    library("phenopath")
+  }
 
-  if (!require("edgeR"))
+  if (!require("edgeR")){
     BiocManager::install("edgeR")
-
-  if(!require(devtools))
-    install.packages("devtools")
-
-  if(!require(AMCBGeneUtils))
-    devtools::install_github("AndresMCB/AMCBGeneUtils")
-
+    library("edgeR")
+  }
 
   # if gene expression of 2 conditions is provided,
   # bind them in a single gene expression matrix G

@@ -55,10 +55,11 @@ binned <- DCDKM.BinTime(Mat1 = rbind(mat1,mat2), covariate = "ENSG00000141736"
                       , Features = Features)
 
 # Run experiments only for those targets that are present in the dataset.
+target <- AMCBGeneUtils::changeGeneId(BRCA.40CD)
 target <- intersect(target$Ensembl.ID,colnames(binned$Env1))
 
 results <- vector(mode = "list",length = length(target))
-names(results) <- target
+
 library(tictoc)
 for (i in target) {
   tic()
@@ -67,7 +68,7 @@ for (i in target) {
   features <- c(i,predictors)
   k <- length(features)
 
-  testModels <- DCDKGetModels(length(features), option = 3)
+  testModels <- DCDKM.GetModels(length(features), option = 3)
   models <- c(testModels$models.1, testModels$models.2, testModels$models.3)
 
   invariantScore<-NULL

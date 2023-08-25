@@ -16,6 +16,15 @@ DCDKM.GeneSelection <- function(Mat1, Mat2 = NULL, Cond1type = NULL, Cond2type =
   if(!require(tidyverse))
     install.packages("tidyverse")
 
+  if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+  if(!require(edgeR)){
+    BiocManager::install("edgeR")
+    library(edgeR)
+  }
+
+
   if(!is.null(Mat2))
     Features <- intersect(colnames(Mat1),colnames(Mat2)) else
     Features <-colnames(Mat1)
@@ -59,7 +68,7 @@ DCDKM.GeneSelection <- function(Mat1, Mat2 = NULL, Cond1type = NULL, Cond2type =
     message("If you want to perform it please be sure to provide PPIcutoff >= 1")
   }  else{
     if(is.null(PPI)){
-      data(PPI, package = "DynamicCancerDriverKM")
+      PPI <- DynamicCancerDriverKM::PPI
       aux1 <- PPI%>%
         dplyr::count(`Input-node Gene Symbol`)
       colnames(aux1) <- c("HGNC.symbol","nIn")
