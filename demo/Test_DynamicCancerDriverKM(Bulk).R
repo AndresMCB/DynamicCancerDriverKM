@@ -15,7 +15,7 @@ if (!requireNamespace("tidyverse", quietly = TRUE))
 if (!requireNamespace("AMCBGeneUtils", quietly = TRUE))
   devtools::install_github(repo = "AndresMCB/AMCBGeneUtils")
 
-if (!requireNamespace("DynamicCancerDriver", quietly = TRUE))
+if (!requireNamespace("DynamicCancerDriverKM"))
   devtools::install_github(repo = "AndresMCB/DynamicCancerDriverKM")
 
 library(DynamicCancerDriverKM)
