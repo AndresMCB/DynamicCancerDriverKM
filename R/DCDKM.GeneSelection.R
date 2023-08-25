@@ -17,8 +17,7 @@ DCDKM.GeneSelection <- function(Mat1, Mat2 = NULL, Cond1type = NULL, Cond2type =
     install.packages("tidyverse")
 
   if(!is.null(Mat2))
-    Features <- intersect(colnames(Mat1),colnames(Mat2))
-  else
+    Features <- intersect(colnames(Mat1),colnames(Mat2)) else
     Features <-colnames(Mat1)
   if(length(Features)==0){
     stop("Error: no common genes between Mat1 and Mat2")
@@ -28,8 +27,7 @@ DCDKM.GeneSelection <- function(Mat1, Mat2 = NULL, Cond1type = NULL, Cond2type =
   if(is.null(Mat2) | is.null(Cond1type) | is.null(Cond2type) ){
     message("DEG analysis is omitted.")
     message("If you want to perform it please be sure to provide MAt2, Cond1type, and Cond2type")
-  }
-  else{
+  }  else{
     if (!require("BiocManager", quietly = TRUE))
       install.packages("BiocManager")
     if(!require(TCGAbiolinks))
@@ -59,8 +57,7 @@ DCDKM.GeneSelection <- function(Mat1, Mat2 = NULL, Cond1type = NULL, Cond2type =
   if(is.null(PPIcutoff)){
     message("PPI analysis is omitted.")
     message("If you want to perform it please be sure to provide PPIcutoff >= 1")
-  }
-  else{
+  }  else{
     if(is.null(PPI)){
       data(PPI, package = "DynamicCancerDriverKM")
       aux1 <- PPI%>%
