@@ -51,9 +51,8 @@ DCDKM.GeneSelection <- function(Mat1, Mat2 = NULL, Cond1type = NULL, Cond2type =
                                               logFC.cut = logFC.cut,
                                               method = DEGMethod)
     if(any("ID"%in%colnames(dataDEGs)))
-      Features <- dataDEGs$ID
-    else
-      Features <- row.names(dataDEGs)
+      {Features <- dataDEGs$ID}else
+        Features <- row.names(dataDEGs)
   }
 
   #### PPI analysis
