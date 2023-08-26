@@ -59,11 +59,11 @@ target <- AMCBGeneUtils::changeGeneId(BRCA.40CD)
 target <- intersect(target$Ensembl.ID,colnames(binned$Env1))
 
 results <- vector(mode = "list",length = length(target))
-
+names(results) <- target
 #i <- target[1]
-#library(tictoc)
+library(tictoc)
 for (i in target) {
-  #tic()
+  tic()
   predictors <- setdiff(Features,i)
   predictors <- intersect(predictors,colnames(binned$Env1))
   features <- c(i,predictors)
@@ -74,7 +74,7 @@ for (i in target) {
 
   invariantScore<-NULL
   for (j in 1:3) {
-    #tic()
+    tic()
     aux <-  DCDKM.modelScoring(models = testModels[[j]]
                          , binned = binned, parallel = TRUE
                          , features = features
@@ -83,7 +83,7 @@ for (i in target) {
                              ,aux$modelScores)
     invariantScore$formulas <-c(invariantScore$formulas
                                 ,aux$formulas)
-   # toc()
+    toc()
   }
 
 
@@ -107,7 +107,7 @@ for (i in target) {
   results[[i]]$InvariantScore <- invariantScore$score[index[1:k]]
   results[[i]]$Summary <- performance.CGC(geneScore = geneScore
                                           , top = seq(50, 250, 50))
-  #toc()
+  toc()
 }
 
 

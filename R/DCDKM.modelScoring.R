@@ -1,3 +1,106 @@
+summariseResults <- function(resultList, top = seq(50, 150, 50) ){
+  qwer <- lapply(resultList
+                 , function(GeneResult){
+                   topModels <- GeneResult$topModels
+                   features <- GeneResult$geneScore[["features"]]
+                   geneScore <- driverScore(topModels, features)
+                   outcome <- performance.CGC(geneScore = geneScore
+                                              , top = top)
+                   outcome$geneScore <- geneScore
+                   return(outcome)
+                 })
+  newNcol <- 2*ncol(qwer[[1]][["summaryTable"]])+4
+  allResults2 <- matrix(nrow = length(qwer)
+                        , ncol = newNcol)
+  for (i in 1:length(qwer)) {
+    allResults2[i,1] <- names(qwer[i])
+    allResults2[i,2] <- length(qwer[[i]][[1]])
+    allResults2[i,3] <- nrow(qwer[[i]][["geneScore"]])
+    allResults2[i,4] <- sum(qwer[[i]][["geneScore"]]["score"]>0)
+    aux <- performance.CGC(geneScore = qwer[[i]][["geneScore"]]
+                           , top = as.numeric(allResults2[i,4]))
+    allResults2[i,5:6] <- data.matrix(cbind(length(aux[[2]]),aux[[3]][2]))
+    for (j in 1:(ncol(qwer[[i]]$summaryTable)-1)) {
+      allResults2[i,2*j+5] <- length(qwer[[i]][[(j+1)]])
+      allResults2[i,2*j+6] <-
+        data.matrix(qwer[[i]]$summaryTable[(j+1)])
+    }
+  }
+  colnames(allResults2) <- paste0("c",1:ncol(allResults2))
+  colnames(allResults2)[1:6] <- c("target","CGC_baseline", "nVars", "nDCDK", "top_nDCDK"
+                                  ,"pval_nDCDK")
+  colnames(allResults2)[seq(7,newNcol,2)] <- paste0("top_",top)
+  colnames(allResults2)[seq(8,newNcol,2)] <- paste0("pval_top_",top)
+  allResults2 <- cbind(AMCBGeneUtils::changeGeneId(allResults2[,1]
+                                                   , from = "Ensembl.ID"
+                                                   ,to = "HGNC.symbol")[2]
+                       , allResults2)
+  #View(allResults2)
+  return(allResults2)
+}
+
+
+
+getFormula <- function(model, features, targetIndex){
+  f <- paste(paste0("d_",features[targetIndex]),"~ ")
+  for (i in 1:length(model)) {
+    if(i>1)
+      f <- paste(f,"+")
+    f <- paste(f,paste(features[model[[i]]],collapse = ":"))
+  }
+  f <- paste(f,"- 1")
+  return(f)
+}
+
+driverScore <- function(models, features){
+  d <- length(features)
+  gScore <- data.frame(features = features, score = numeric(d))
+  for (i in 1:d) {
+    Vi <- sapply(models
+                 , function(model,gene){
+                   return(any(gene %in% unlist(model)))
+                 }
+                 ,i)
+    gScore[i,2] <- sum(Vi)/d
+  }
+  return(gScore)
+}
+
+performance.CGC<-function(geneScore = NULL
+                          , top = c(50,100,150,200,250)
+){
+  aux <- list()
+  features <-geneScore$features
+  aux$CGC.baseline = intersect(geneScore$features ,CGC.driverNames$Ensembl.ID)
+  geneScore <- geneScore %>%
+    arrange(desc(score))%>%
+    filter(score>0)
+
+
+  summaryTable <- data.frame(CGC.baseline = length(aux$CGC.baseline))
+
+  for (i in top) {
+    varName <- paste0("top_", i)
+    aux[[varName]] <- intersect(geneScore$features[1:i]
+                                ,CGC.driverNames$Ensembl.ID)
+
+    p.val <- 1 - phyper(q = length(aux[[varName]])-1
+                        , m = length(aux$CGC.baseline)
+                        , n = length(features)-length(aux$CGC.baseline)
+                        , k = i, lower.tail = T, log.p = FALSE)
+    varName <- paste0("p.val_top_", i)
+    summaryTable[[varName]] <- p.val
+  }
+  aux$summaryTable <- summaryTable
+  return(aux)
+}
+
+##############
+##############
+
+
+
+
 DCDKM.modelScoring <- function(models = NULL, binned, features, targetIndex, parallel = T
                          , num.folds = 2, score.type = "mean_absolute"){
 
