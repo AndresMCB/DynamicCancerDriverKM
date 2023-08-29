@@ -55,15 +55,18 @@ binned <- DCDKM.BinTime(Mat1 = rbind(mat1,mat2), covariate = "ENSG00000141736"
                       , Features = Features)
 
 # Run experiments only for those targets that are present in the dataset.
-target <- AMCBGeneUtils::changeGeneId(BRCA.40CD)
+#target <- AMCBGeneUtils::changeGeneId(BRCA.40CD)
+target <- AMCBGeneUtils::changeGeneId(c("MEN1","AFDN","PIK3R1"))
 target <- intersect(target$Ensembl.ID,colnames(binned$Env1))
 
 results <- vector(mode = "list",length = length(target))
 names(results) <- target
 #i <- target[1]
+counter <- 1
 library(tictoc)
 for (i in target) {
   tic()
+  message(paste("Gene ",counter,", i"))
   predictors <- setdiff(Features,i)
   predictors <- intersect(predictors,colnames(binned$Env1))
   features <- c(i,predictors)
@@ -73,40 +76,43 @@ for (i in target) {
   models <- c(testModels$models.1, testModels$models.2, testModels$models.3)
 
   invariantScore<-NULL
-  for (j in 1:3) {
-    tic()
-    aux <-  DCDKM.modelScoring(models = testModels[[j]]
-                         , binned = binned, parallel = TRUE
-                         , features = features
-                         , targetIndex = 1, num.folds = 2)
-    invariantScore$score <-c(invariantScore$score
-                             ,aux$modelScores)
-    invariantScore$formulas <-c(invariantScore$formulas
-                                ,aux$formulas)
-    toc()
-  }
+  # for (j in 1:3) {
+  #   tic()
+  #   aux <-  DCDKM.modelScoring(models = testModels[[j]]
+  #                        , binned = binned, parallel = TRUE
+  #                        , features = features
+  #                        , targetIndex = 1, num.folds = 2)
+  #   invariantScore$score <-c(invariantScore$score
+  #                            ,aux$modelScores)
+  #   invariantScore$formulas <-c(invariantScore$formulas
+  #                               ,aux$formulas)
+  #   toc()
+  # }
+  invariantScore <-  DCDKM.modelScoring(models = models
+                             , binned = binned, parallel = TRUE
+                             , features = features
+                             , targetIndex = 1, num.folds = 2)
 
-
-  index <- order(invariantScore$score)
+  index <- order(invariantScore$modelScores)
   topModels <- models[index[1:k]]
 
   geneScore <- driverScore(topModels, features)
 
-  DCDK <- geneScore%>%
+  InferredDrivers <- geneScore%>%
     filter(score>0)
-  #performance.CGC(geneScore = geneScore, top = seq(50, 285, 5))
+  performance.CGC(geneScore = geneScore, top = c(seq(50, 285, 25),nrow(InferredDrivers)))
 
   #formulas <- sapply(topModels,getFormula, features)
   #topModels$InvariantScore <- invariantScore$score[index[1:k]]
 
   results[[i]]$topModels <- topModels
   results[[i]]$geneScore <- geneScore
-  #  results[[i]]$DCDk <- DCDK
+  results[[i]]$InferredDrivers <- InferredDrivers
   results[[i]]$formulas <- invariantScore$formulas[index[1:k]]
   #  results[[i]]$fits <- invariantScore$fits[index[1:k]]
-  results[[i]]$InvariantScore <- invariantScore$score[index[1:k]]
+  results[[i]]$modelScore <- invariantScore$score[index[1:k]]
   results[[i]]$Summary <- performance.CGC(geneScore = geneScore
-                                          , top = seq(50, 250, 50))
+                                          , top = c(seq(50, 250, 50),nrow(InferredDrivers)))
   toc()
 }
 
