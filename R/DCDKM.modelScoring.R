@@ -91,12 +91,21 @@ performance.CGC<-function(geneScore = NULL
 DCDKM.modelScoring <- function(models = NULL, binned, features, targetIndex, parallel = T
                          , num.folds = 2, score.type = "mean_absolute"){
 
-  if(!require(fda, quietly = T))
+  if(!require(fda, quietly = T)){
     install.packages("fda")
-  if(!require(fda, quietly = T))
+    library(fda)
+  }
+
+  if(!require(fda, quietly = T)){
     install.packages("cvTools")
-  if(!require(fda, quietly = T))
+    library(cvTools)
+  }
+
+  if(!require(fda, quietly = T)){
     install.packages("quadprog")
+    library(quadprog)
+  }
+
 
   k <- length(features)
   num.folds <- 2
