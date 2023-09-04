@@ -96,12 +96,12 @@ DCDKM.modelScoring <- function(models = NULL, binned, features, targetIndex, par
     library(fda)
   }
 
-  if(!require(fda, quietly = T)){
+  if(!require(cvTools, quietly = T)){
     install.packages("cvTools")
     library(cvTools)
   }
 
-  if(!require(fda, quietly = T)){
+  if(!require(quadprog, quietly = T)){
     install.packages("quadprog")
     library(quadprog)
   }
