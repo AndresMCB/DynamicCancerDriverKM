@@ -40,37 +40,46 @@ DCDKM.BinTime <- function(Mat1, Mat2 = NULL, covariate, Features
     G <- Mat1
   }
 
+  findPtime <- TRUE
+  if(!is.null(pTime)){
+    pTime <- as.matrix(temp, ncol=1)
+    if(nrow(pTime) != nrow(G)){
+      message(paste("pTime provided is not suitable."
+      ,"pTime should be a vector with length equal to"
+      ,"number of rows (samples)")
+      )
+      message("using Phenopath to calculate a pseudotime order")
+    }else{
+      findPtime <- FALSE
+      row.names(pTime) <- row.names(exprs_obj)
+    }
+  }
+  if(findPtime){
+    covariate <-intersect(covariate, colnames(G))
+    if(length(covariate)==0)
+      stop("Error: Covariate was not found in G")
 
-  covariate <-intersect(covariate, colnames(G))
-  if(length(covariate)==0)
-    stop("Error: Covariate was not found in G")
-
-  # Find the number of bins
-  if(!is.numeric(nBins) || nBins<10)
-    stop("Error: number of Bins (nBins) needs to be a
+    # Find the number of bins
+    if(!is.numeric(nBins) || nBins<10)
+      stop("Error: number of Bins (nBins) needs to be a
          positive number greater than 10")
 
-  # Find the number of samples per bin
-  spBin <- nrow(G)/nBins
-  if((spBin)<2)
-    stop("number of bins (nBins) is too large.
+    # Find the number of samples per bin
+    spBin <- nrow(G)/nBins
+    if((spBin)<2)
+      stop("number of bins (nBins) is too large.
          At least 2 samples per bin are required.")
+      exprs_obj <-data.matrix(G)
+      Features <- intersect(Features, colnames(exprs_obj))
+      aux <- setdiff(Features, covariate)
+      exprs_obj <- log2(exprs_obj[,aux,drop=F]+1)
 
-  # If pTime is not provided, use Phenopath to find a pseudotime
-  if(is.null(pTime)){
-    exprs_obj <-data.matrix(G)
-    Features <- intersect(Features, colnames(exprs_obj))
-    aux <- setdiff(Features, covariate)
-    exprs_obj <- log2(exprs_obj[,aux,drop=F]+1)
-
-
-    PhenoP <- phenopath(exprs_obj = exprs_obj
-                        , x = data.matrix(G[,covariate, drop=F])
-                        , elbo_tol = elbo_tol)
-    plot_elbo(PhenoP)
-    pTime <- as.matrix(trajectory(PhenoP),ncol=1)
-    row.names(pTime) <- row.names(exprs_obj)
-
+      PhenoP <- phenopath(exprs_obj = exprs_obj
+                          , x = data.matrix(G[,covariate, drop=F])
+                          , elbo_tol = elbo_tol)
+      plot_elbo(PhenoP)
+      pTime <- as.matrix(trajectory(PhenoP),ncol=1)
+      row.names(pTime) <- row.names(exprs_obj)
   }
 
     #ascending order

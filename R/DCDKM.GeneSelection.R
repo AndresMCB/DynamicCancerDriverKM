@@ -25,9 +25,21 @@ DCDKM.GeneSelection <- function(Mat1, Mat2 = NULL, Cond1type = NULL, Cond2type =
   }
 
 
-  if(!is.null(Mat2))
-    Features <- intersect(colnames(Mat1),colnames(Mat2)) else
+  if(!is.null(Mat2)){
+    Features <- intersect(colnames(Mat1),colnames(Mat2))
+    message(paste("There are a total of"
+                  ,length(Features)
+                  ,"features in common between Mat1 and Mat2")
+    )
+
+  }else{
     Features <-colnames(Mat1)
+    message(paste("There are"
+      ,length(Features)
+      ,"in Mat1"
+      )
+    )
+  }
   if(length(Features)==0){
     stop("Error: no common genes between Mat1 and Mat2")
   }
@@ -36,7 +48,7 @@ DCDKM.GeneSelection <- function(Mat1, Mat2 = NULL, Cond1type = NULL, Cond2type =
   if(is.null(Mat2) | is.null(Cond1type) | is.null(Cond2type) ){
     message("DEG analysis is omitted.")
     message("If you want to perform it please be sure to provide MAt2, Cond1type, and Cond2type")
-  }  else{
+  }else{
     if (!require("BiocManager", quietly = TRUE))
       install.packages("BiocManager")
     if(!require(TCGAbiolinks))
@@ -44,9 +56,7 @@ DCDKM.GeneSelection <- function(Mat1, Mat2 = NULL, Cond1type = NULL, Cond2type =
 
     set.seed(1)
     mat1 = t(Mat1)
-    # colnames(mat1) <- BRCA_normal$barcode
     mat2 = t(Mat2)
-    # colnames(mat2) <- BRCA_PT$barcode
 
     dataDEGs <- TCGAbiolinks::TCGAanalyze_DEA(mat1 = mat1,
                                               mat2 = mat2,
@@ -66,7 +76,7 @@ DCDKM.GeneSelection <- function(Mat1, Mat2 = NULL, Cond1type = NULL, Cond2type =
   if(is.null(PPIcutoff)){
     message("PPI analysis is omitted.")
     message("If you want to perform it please be sure to provide PPIcutoff >= 1")
-  }  else{
+  }else{
     if(is.null(PPI)){
       PPI <- DynamicCancerDriverKM::PPI
       aux1 <- PPI%>%
