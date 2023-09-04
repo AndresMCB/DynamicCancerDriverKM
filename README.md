@@ -1,5 +1,5 @@
 # DynamicCancerDriverKM
-DynamicCancerDriverKM package contains functions to identify genes interacting and collaborating to drive alterned core biological processes during cancer progression. Our package test causality in the setup of dynamical system models. Formally, our method test the causal structure of gene collaborations and interactions durng cancer development to identify cancer drivers and collaborative gene networks. 
+DynamicCancerDriverKM package contains functions to identify genes interacting and collaborating to drive altered core biological processes during cancer progression. Our package test causality in the setup of dynamical system models. Formally, our method test the causal structure of gene collaborations and interactions durng cancer development to identify cancer drivers and collaborative gene networks. 
 
 ### Note
 Please find the results of our experiments in the folder [inst/Supplementary/](inst/Supplementary/). You can also access them from R by using the name of the file. For example:
