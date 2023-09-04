@@ -100,7 +100,7 @@ for (i in target) {
 
   InferredDrivers <- geneScore%>%
     filter(score>0)
-  performance.CGC(geneScore = geneScore, top = c(seq(50, 285, 25),nrow(InferredDrivers)))
+  #performance.CGC(geneScore = geneScore, top = c(seq(50, 285, 25),nrow(InferredDrivers)))
 
   #formulas <- sapply(topModels,getFormula, features)
   #topModels$InvariantScore <- invariantScore$score[index[1:k]]

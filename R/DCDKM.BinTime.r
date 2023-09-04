@@ -21,7 +21,7 @@ DCDKM.BinTime <- function(Mat1, Mat2 = NULL, covariate, Features
   if (!require("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
 
-  if (!require("phenopath")){
+  if (!require("phenopath",  quietly = TRUE)){
     BiocManager::install("phenopath")
     library("phenopath")
   }

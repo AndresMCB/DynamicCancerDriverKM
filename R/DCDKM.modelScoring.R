@@ -52,19 +52,6 @@ getFormula <- function(model, features, targetIndex){
   return(f)
 }
 
-driverScore <- function(models, features){
-  d <- length(features)
-  gScore <- data.frame(features = features, score = numeric(d))
-  for (i in 1:d) {
-    Vi <- sapply(models
-                 , function(model,gene){
-                   return(any(gene %in% unlist(model)))
-                 }
-                 ,i)
-    gScore[i,2] <- sum(Vi)/d
-  }
-  return(gScore)
-}
 
 performance.CGC<-function(geneScore = NULL
                           , top = c(50,100,150,200,250)
@@ -103,6 +90,13 @@ performance.CGC<-function(geneScore = NULL
 
 DCDKM.modelScoring <- function(models = NULL, binned, features, targetIndex, parallel = T
                          , num.folds = 2, score.type = "mean_absolute"){
+
+  if(!require(fda, quietly = T))
+    install.packages("fda")
+  if(!require(fda, quietly = T))
+    install.packages("cvTools")
+  if(!require(fda, quietly = T))
+    install.packages("quadprog")
 
   k <- length(features)
   num.folds <- 2
