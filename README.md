@@ -1,26 +1,11 @@
 # DynamicCancerDriverKM
 DynamicCancerDriverKM package contains functions to identify genes interacting and collaborating to drive altered core biological processes during cancer progression. Our package test causality in the setup of dynamical system models. Formally, our method test the causal structure of gene collaborations and interactions durng cancer development to identify cancer drivers and collaborative gene networks. 
 
-### Note
-Please find the results of our experiments in the folder [inst/Supplementary/](inst/Supplementary/). You can also access them from R by using the name of the file. For example:
-
-```R
-aux <- system.file("Supplementary/"
-                   , "supplementary table 1 hypertest for 39 target genes(Bulk).csv"
-                   , package = "DynamicCancerDriverKM")
-Summary_bulk <- read.csv(aux)
-```
-
 ## Introduction 
-Our method takes gene expression data from cross-sectional studies. 
+Our method takes gene expression data from cross-sectional studies. The method integrates the temporal dimension of the data along the cancer progression and provides a way to test for causality of candidate genes on cancer. We have applied our method to single-cell and bulk sequencing datasets of breast cancer. The evaluation results show that our method systematically identifies bona fide driver genes and detects sets of genes strongly linked to cancer progression. The results suggest that
+our method can discover mutated and non mutated drivers of cancer to provide a comprehensive view of cancer development.
 
-We use the pseudotime (either provided or inferred by using PhenoPath) and the covariate provided to
-find a critical turning point in the trajectory along the pseudotime. We
-name this critical point as the "event".
-
-We applied our dynamic cancer drivers approach to a single cell RNA
-sequencing dataset (NCBI GEO database, accession [GSE75688](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE75688)) ([Chung
-et al., 2017](https://www.nature.com/articles/ncomms15081)), and the cancer genome atlas breast cancer dataset ([TCGA-BRCA](https://portal.gdc.cancer.gov/projects/TCGA-BRCA)).
+We applied our dynamic cancer drivers approach to a single cell RNA sequencing dataset (NCBI GEO database, accession [GSE75688](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE75688)) ([Chung et al., 2017](https://www.nature.com/articles/ncomms15081)), and the cancer genome atlas breast cancer dataset ([TCGA-BRCA](https://portal.gdc.cancer.gov/projects/TCGA-BRCA)).
 Experiments implemented in our paper can be found as follows:
 1. [demo/Test_DynamicCancerDriverKM(SC).R](demo/Test_DynamicCancerDriverKM(SC).R): Drivers inferred from a pre-processed Single Cell data, (GSE75688)
 2. [demo/Test_DynamicCancerDriverKM(Bulk).R](demo/Test_DynamicCancerDriverKM(Bulk).R): Drivers inferred from the TCGA-BRCA dataset.
@@ -56,6 +41,4 @@ BiocManager::install("phenopath")
 
 ```
 ## Documentation 
-Detailed information about the functions implemented in PTC can be found in the [user manual](DynamicCancerDriver_1.4.1.pdf)
-
 Please find the datasets employed in our paper in the folder [data](data/)
