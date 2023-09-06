@@ -1,5 +1,5 @@
 # DynamicCancerDriverKM
-DynamicCancerDriverKM package contains functions to identify genes interacting and collaborating to drive altered core biological processes during cancer progression. Our package test causality in the setup of dynamical system models. Formally, our method test the causal structure of gene collaborations and interactions durng cancer development to identify cancer drivers and collaborative gene networks. 
+DynamicCancerDriverKM package contains functions to identify genes interacting and collaborating to drive altered core biological processes during cancer progression. Our package test causality in the setup of dynamical system models. Formally, our method test the causal structure of gene collaborations and interactions during cancer development to identify cancer drivers and collaborative gene networks. 
 
 ## Introduction 
 Our method takes gene expression data from cross-sectional studies. The method integrates the temporal dimension of the data along the cancer progression and provides a way to test for causality of candidate genes on cancer. We have applied our method to single-cell and bulk sequencing datasets of breast cancer. The evaluation results show that our method systematically identifies bona fide driver genes and detects sets of genes strongly linked to cancer progression. The results suggest that
