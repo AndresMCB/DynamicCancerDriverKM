@@ -1,24 +1,34 @@
-DCDKM.GetModels <- function(nPredictors, option = 3){
+DCDKM.GetModels <- function(nPredictors, IncludedModels = c(1,2,3)){
   vars <- 1:nPredictors
 
-  models.1 <- apply(combn(vars,2), MARGIN = 2
-                    , function(x){
-                      list(x[1],x[2])
-                    })
+  Collab <- NULL
+  Inter <- NULL
+  MainEffects <- NULL
+  outcome <- NULL
 
-  models.2 <- apply(combn(vars,2), MARGIN = 2
+  # pairwise gene collaboration linear models
+  if(1%in%IncludedModels){
+    outcome$Collab <- apply(combn(vars,2), MARGIN = 2
+                  , function(x){
+                    list(x[1],x[2])
+                  })
+  }
+
+  # pairwise interaction models
+  if(2%in%IncludedModels){
+    outcome$Inter <- apply(combn(vars,2), MARGIN = 2
                     , function(x){
                       list(x)
                     })
+  }
 
-  models.3 <- apply(combn(vars,2), MARGIN = 2
+  # Main Effect models (i.e interactions + collaborations)
+  if(3%in%IncludedModels){
+    outcome$MainEffects <- apply(combn(vars,2), MARGIN = 2
                     , function(x){
                       list(x[1],x[2],x)
                     })
-
-  return(list(models.1 = models.1
-              , models.2 = models.2
-              , models.3 = models.3
-  ))
+  }
+  return(outcome)
 
 }
