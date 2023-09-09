@@ -27,7 +27,7 @@ install.packages("devtools")
 
 3. Install DynamicCancerDriver package from github repository 
 ```R
-devtools::install_github('AndresMCB/DynamicCancerDriver')
+devtools::install_github('AndresMCB/DynamicCancerDriverKM')
 ```
 
 4. Please install DynamicCancerDriver additional packages required as follows: 
