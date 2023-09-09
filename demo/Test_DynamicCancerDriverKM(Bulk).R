@@ -65,7 +65,7 @@ binned <- DCDKM.BinTime(Mat1 = rbind(mat1,mat2), covariate = "ENSG00000141736"
 # FOXO3, BRCA2, CHEK2, CBFB, and CDKN2A.
 target <- AMCBGeneUtils::changeGeneId(c("MEN1"))
 
-# Uncomment the following line to test all genes.
+# Uncomment the following line to test all genes from our experiments.
 #target <- AMCBGeneUtils::changeGeneId(BRCA.40CD)
 
 target <- intersect(target$Ensembl.ID,colnames(binned$Env1))
@@ -74,7 +74,7 @@ names(results) <- target
 
 counter <- 0
 library(tictoc)
-for (i in target[1]) {
+for (i in target) {
   tic()
   counter <- counter + 1
   message(paste("Gene ",counter,",", i))
