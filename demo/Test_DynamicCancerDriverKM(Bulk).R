@@ -48,30 +48,44 @@ row.names(mat2) <- BRCA_PT$barcode
 
 
 Features <- DCDKM.GeneSelection(Mat1 = mat1, Mat2 =mat2, Cond1type = "normal",Cond2type = "PT"
-                              , PPIcutoff = 11)
+                              , PPIcutoff = 4)
 
 # Her2 as covariate for phenopath
 binned <- DCDKM.BinTime(Mat1 = rbind(mat1,mat2), covariate = "ENSG00000141736"
                       , Features = Features)
 
-# Run experiments only for those targets that are present in the dataset.
-#target <- AMCBGeneUtils::changeGeneId(BRCA.40CD)
-target <- AMCBGeneUtils::changeGeneId(c("MEN1"))
-target <- intersect(target$Ensembl.ID,colnames(binned$Env1))
+# Run experiments only for those targets that are present
+# in the dataset (39 genes as AGTR2(ENSG00000180772) is missing).
 
+# NOTE: running all 39 target can be extremely time consuming.
+#   (~30 min per target). We suggest to test one target
+#  at a time if you are running this in a Personal Computer.
+# some suggested targets from our experiments are:
+# MEN1, AFDN, PIK3R1, TP53, NF1, PIK3CA,
+# FOXO3, BRCA2, CHEK2, CBFB, and CDKN2A.
+target <- AMCBGeneUtils::changeGeneId(c("MEN1"))
+
+# Uncomment the following line to test all genes.
+#target <- AMCBGeneUtils::changeGeneId(BRCA.40CD)
+
+target <- intersect(target$Ensembl.ID,colnames(binned$Env1))
 results <- vector(mode = "list",length = length(target))
 names(results) <- target
 
-counter <- 1
+counter <- 0
 library(tictoc)
-for (i in target) {
+for (i in target[1]) {
   tic()
+  counter <- counter + 1
   message(paste("Gene ",counter,",", i))
   predictors <- setdiff(Features,i)
   predictors <- intersect(predictors,colnames(binned$Env1))
-  features <- c(i,predictors)
-  k <- length(features)
 
+  # put the target variable y as the first feature.
+  features <- c(i,predictors)
+  # define the number of top models to be considered (k)
+  k <- length(features)
+  # get the symbolic notation for the models
   testModels <- DCDKM.GetModels(length(features))
   invariantScore<-NULL
   for (j in 1:length(testModels)) {
