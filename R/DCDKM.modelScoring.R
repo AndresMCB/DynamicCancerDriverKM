@@ -94,7 +94,6 @@ DCDKM.modelScoring <- function(models = NULL, binned, features, targetIndex, par
   ## Find data fit A "Data Fit A calculates a smoothing spline to the data
   ## using all realization from the same experiment"
   for (i in 1:ncol(Y)) {
-    #fit <- CausalKinetiX::
     fit <- constrained.smoothspline(Y[,i],
                                     binned$binTime,
                                     pen.degree=2,

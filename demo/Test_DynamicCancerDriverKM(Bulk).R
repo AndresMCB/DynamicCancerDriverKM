@@ -81,7 +81,7 @@ for (i in target) {
   predictors <- setdiff(Features,i)
   predictors <- intersect(predictors,colnames(binned$Env1))
 
-  # put the target variable y as the first feature.
+  # put the target variable "y" as the first feature.
   features <- c(i,predictors)
   # define the number of top models to be considered (k)
   k <- length(features)
@@ -90,6 +90,7 @@ for (i in target) {
   invariantScore<-NULL
   for (j in 1:length(testModels)) {
      tic()
+    #Score each model (the lower the score the better towards invariance)
      aux <-  DCDKM.modelScoring(models = testModels[[j]]
                           , binned = binned, parallel = TRUE
                           , features = features
@@ -100,17 +101,18 @@ for (i in target) {
                                  ,aux$formulas)
      toc()
    }
-
+# retrieve the top k models with better "invariant" score
   index <- order(invariantScore$score)
   models <- unlist(testModels, recursive = FALSE)
   topModels <- models[index[1:k]]
-
+  #score genes (the more invariant models the gene appears
+  #the higher the score)
   geneScore <- driverScore(topModels, features)
-
+  #Inferred genes as genes with score greater than 0
   InferredDrivers <- geneScore%>%
     filter(score>0)
 
-
+#Assemble the results.
   results[[i]]$topModels <- topModels
   results[[i]]$geneScore <- geneScore
   results[[i]]$InferredDrivers <- InferredDrivers
