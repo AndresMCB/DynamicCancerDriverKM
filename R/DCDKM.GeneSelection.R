@@ -25,6 +25,12 @@ DCDKM.GeneSelection <- function(Mat1, Mat2 = NULL, Cond1type = NULL, Cond2type =
   }
 
 
+  if(!require(TCGAbiolinks)){
+    BiocManager::install("TCGAbiolinks")
+    library(TCGAbiolinks)
+  }
+
+
   if(!is.null(Mat2)){
     Features <- intersect(colnames(Mat1),colnames(Mat2))
     message(paste("There are a total of"
