@@ -223,10 +223,7 @@ DCDKM.modelScoring <- function(models = NULL, binned, features, targetIndex, par
                           , function(singleModel){
                             return(singleModel$score)
                           })
-    # scores <- vector("numeric",)
-    # for (i in 1:length(modelScores)) {
-    #
-    # }
+
   }
   else{
     modelScores <- vector("numeric", num.models)
@@ -304,15 +301,8 @@ DCDKM.modelScoring <- function(models = NULL, binned, features, targetIndex, par
       }
     }
   }
-  # modelFits <- lapply(modelScores
-  #                     , function(singleModel){
-  #                       return(list(lmFit = singleModel$fitLM
-  #                                   , splineFit = singleModel$fitSpline
-  #                                   ))
-  #                     }
-  #                     )
+
   return(list(modelScores = modelScores, formulas = formulas ))
-  #return(modelScores = modelScores)
 }
 
 
