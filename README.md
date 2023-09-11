@@ -25,19 +25,19 @@ We also use some utilities from another of our packages ([AMCBGeneUtils](https:/
 install.packages("devtools")
 ```
 
-3. Install DynamicCancerDriver package from github repository 
+3. Install DynamicCancerDriverKM package from github repository 
 ```R
 devtools::install_github('AndresMCB/DynamicCancerDriverKM')
 ```
 
-4. Please install DynamicCancerDriver additional packages required as follows: 
+4. Please install additional packages required for DynamicCancerDriverKM as follows: 
 ```R
 devtools::install_github('AndresMCB/AMCBGeneUtils')
 
 if (!requireNamespace("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
 
-BiocManager::install("phenopath")
+BiocManager::install(c("edgeR","phenopath", "TCGAbiolinks"))
 
 ```
 ## Documentation 
