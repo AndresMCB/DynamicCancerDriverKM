@@ -153,11 +153,9 @@ for (i in names(results)) {
 
 aux <- sapply(aux, function(x){paste("target",x)})
 names(temp) <- aux
-
-
 require(openxlsx)
 write.xlsx(temp, file = "supp_Table9 - inferred drivers from single cell.xlsx")
-names(results) <- target
+
 
 
 
