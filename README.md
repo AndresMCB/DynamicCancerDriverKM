@@ -42,3 +42,4 @@ BiocManager::install(c("edgeR","phenopath", "TCGAbiolinks"))
 ```
 ## Documentation 
 Please find the datasets employed in our paper in the folder [data](data/)
+Supplementary tables described in our paper can be found in the folder [supplementary](supplementary/)
