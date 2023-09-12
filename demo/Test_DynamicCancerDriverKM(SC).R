@@ -133,7 +133,7 @@ for (i in target) {
   results[[i]]$formulas <- invariantScore$formulas[index[1:k]]
   results[[i]]$modelScore <- invariantScore$score[index[1:k]]
   results[[i]]$Summary <- overlapCGC(geneScore = geneScore
-                                     , top = c(seq(50, 250, 50),nrow(InferredDrivers)))
+                                     , top = c(seq(10, 80, 10),nrow(InferredDrivers)))
   toc()
 }
 
@@ -156,8 +156,10 @@ names(temp) <- aux
 require(openxlsx)
 write.xlsx(temp, file = "supp_Table9 - inferred drivers from single cell.xlsx")
 
+####################################################################################
+# save the results of the experiments as a R file for future use
 
-
+save(results, file = "ExperimentsSC.rdata")
 
 
 
