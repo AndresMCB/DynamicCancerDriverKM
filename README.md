@@ -13,18 +13,17 @@ Scripts with the experiments implemented in our paper can be found as follows:
 2. [demo/Test_DynamicCancerDriverKM(Bulk).R](demo/Test_DynamicCancerDriverKM(Bulk).R): Experiments using the TCGA-BRCA dataset.
 
 Results of our experiments (as R data lists) can be found in the folder [experiments](experiments/)
-1.
 
 ## Installation 
-DynamicCancerDriver runs in the R statistical computing environment.
+DynamicCancerDriverKM runs in the R statistical computing environment.
 
 R (>=4.1.0), devtools(>=2.4.2), Rtools (>=4.0), Bioconductor (>=3.14), phenopath (tested with v. 1.18.0), and
  tidyverse(>= 1.3.1) are  required.
 We also use some utilities from another of our packages ([AMCBGeneUtils](https://github.com/AndresMCB/AMCBGeneUtils)).
 
-1. Please download and install Rtools 4.0 from https://cran.r-project.org/bin/windows/Rtools/, remove the incompatible version from your PATH.
+1. Windows only: please download and install Rtools from https://cran.r-project.org/bin/windows/Rtools/, remove any incompatible version from your PATH.
 
-2. Please install devtools 
+1. Please install devtools
 
 ```R
 install.packages("devtools")
