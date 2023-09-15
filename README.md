@@ -9,16 +9,12 @@ We applied our dynamic cancer drivers approach to a single cell RNA sequencing d
 
 ## Experiments
 
-Results of our experiments (as R data lists) can be found in the folder [experiments](experiments/)
-
 Scripts with the experiments implemented in our paper can be found in the folder [demo](\d) as follows:
 1. [demo/Test_DynamicCancerDriverKM(SC).R](demo/Test_DynamicCancerDriverKM(SC).R): Experiments using a pre-processed Single Cell data, (GSE75688)
 2. [demo/Test_DynamicCancerDriverKM(Bulk).R](demo/Test_DynamicCancerDriverKM(Bulk).R): Experiments using the TCGA-BRCA dataset.
 
-> [!NOTE]
-> Highlights information that users should take into account, even when skimming.
-
-
+> [!IMPORTANT]  
+> Running the demo scripts can be time consuming (especially for the TCGA dataset). For personal computers we recommend to test our method by using one target gene at the time. Alternatively, you can find the outcomes of our demo scripts in the (results of our experiments as R data lists) in the [experiments](experiments/) folder.
 
 ## Installation 
 DynamicCancerDriverKM runs in the R statistical computing environment.
