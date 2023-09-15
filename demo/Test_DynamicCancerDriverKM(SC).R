@@ -142,7 +142,6 @@ for (i in target) {
 # save the list of inferred driver from Single cell as excel file
 # (one target per excel sheet)
 temp <-list()
-aux <- AMCBGeneUtils::changeGeneId(names(results),from = "Ensembl.ID")[4]
 
 for (i in names(results)) {
   temp[[i]] <-
@@ -151,6 +150,8 @@ for (i in names(results)) {
           ,results[[i]]$InferredDrivers[2])
 }
 
+# change names of the targets to "target" + HGNC symbol for the sake of simplicity
+aux <- AMCBGeneUtils::changeGeneId(names(results),from = "Ensembl.ID")[4]
 aux <- sapply(aux, function(x){paste("target",x)})
 names(temp) <- aux
 require(openxlsx)

@@ -63,10 +63,10 @@ binned <- DCDKM.BinTime(Mat1 = rbind(mat1,mat2), covariate = "ENSG00000141736"
 # some suggested targets from our experiments are:
 # MEN1, AFDN, PIK3R1, TP53, NF1, PIK3CA,
 # FOXO3, BRCA2, CHEK2, CBFB, and CDKN2A.
-target <- AMCBGeneUtils::changeGeneId(c("MEN1"))
+# target <- AMCBGeneUtils::changeGeneId(c("MEN1"))
 
 # Uncomment the following line to test all genes from our experiments.
-#target <- AMCBGeneUtils::changeGeneId(BRCA.40CD)
+target <- AMCBGeneUtils::changeGeneId(BRCA.40CD)
 
 target <- intersect(target$Ensembl.ID,colnames(binned$Env1))
 results <- vector(mode = "list",length = length(target))
@@ -122,6 +122,32 @@ for (i in target) {
                                           , top = c(seq(50, 250, 50),nrow(InferredDrivers)))
   toc()
 }
+
+
+####################################################################################
+# save the list of inferred driver from TCGA-BRCA as excel file
+# (one target per excel sheet)
+temp <-list()
+
+for (i in names(results)) {
+  temp[[i]] <-
+    cbind(AMCBGeneUtils::changeGeneId(results[[i]]$InferredDrivers[1]
+                                      ,from = "Ensembl.ID", to = c("Ensembl.ID","HGNC.symbol"))[2:3]
+          ,results[[i]]$InferredDrivers[2])
+}
+
+# change names of the targets to "target" + HGNC symbol for the sake of simplicity
+aux <- AMCBGeneUtils::changeGeneId(names(results),from = "Ensembl.ID")[4]
+aux <- sapply(aux, function(x){paste("target",x)})
+names(temp) <- aux
+require(openxlsx)
+write.xlsx(temp, file = "supp_Table10 - inferred drivers from TCGA-BRCA.xlsx")
+
+####################################################################################
+# save the results of the experiments as a R file for future use
+
+save(results, file = "ExperimentsBulk.rdata")
+
 
 
 
