@@ -42,7 +42,7 @@ DCDKM.BinTime <- function(Mat1, Mat2 = NULL, covariate, Features
 
   findPtime <- TRUE
   if(!is.null(pTime)){
-    pTime <- as.matrix(temp, ncol=1)
+    pTime <- as.matrix(pTime, ncol=1)
     if(nrow(pTime) != nrow(G)){
       message(paste("pTime provided is not suitable."
       ,"pTime should be a vector with length equal to"
