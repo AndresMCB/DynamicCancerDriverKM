@@ -51,7 +51,7 @@ DCDKM.BinTime <- function(Mat1, Mat2 = NULL, covariate, Features
       message("using Phenopath to calculate a pseudotime order")
     }else{
       findPtime <- FALSE
-      row.names(pTime) <- row.names(exprs_obj)
+      row.names(pTime) <- row.names(Mat1)
     }
   }
   if(findPtime){
