@@ -1,0 +1,7 @@
+file,config,n_runs
+result_2parentsUp.rds,2p_up,500
+result_2parentsDown.rds,2p_down,500
+result_2parentsBoth.rds,2p_both,500
+result_3parentsUp.rds,3p_up,500
+result_3parentsDown.rds,3p_down,500
+result_3parentsBoth.rds,3p_both,500
