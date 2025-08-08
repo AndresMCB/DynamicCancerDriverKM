@@ -1,240 +1,236 @@
 ####################### simulate_gene_expression ###############################
-# This function simulates gene expression data over pseudotime, including 
-# a specified number of differentially expressed genes (DEGs) with either 
-# up- or down-regulation using sigmoid curves, and background noise for 
-# non-DEGs.
-
+#' Simulate multigene expression over pseudotime with DEGs
+#'
+#' Generates a pseudotime vector and builds expression for a set of genes,
+#' where nominated DEGs follow sigmoid trajectories (up/down/mixed) and
+#' non-DEGs follow simple background processes. Returns a data.frame sorted
+#' by pseudotime with columns: Pseudotime, G1..Gn.
+#'
+#' @param n_genes Integer; total number of genes to simulate.
+#' @param DEG_genes Integer vector; indices (1-based) of DEGs among genes.
+#' @param n_timepoints Integer; number of pseudotime points.
+#' @param amplitude_range Numeric length-2; min/max amplitude for DEGs.
+#' @param regulation_type "up", "down", or "both" for DEG directions.
+#' @return data.frame with pseudotime and simulated expression.
 simulate_gene_expression <- function(
-    n_genes = 20,                   # Total number of genes to simulate
-    DEG_genes = c(1),               # Indices of DEGs among the total genes
-    n_timepoints = 300,             # Number of pseudotime points to simulate
-    amplitude_range = c(10, 1000),  # Range of expression amplitudes
-    regulation_type = "up"          # Direction of DEGs: "up", "down", or "both"
+    n_genes = 20,
+    DEG_genes = c(1),
+    n_timepoints = 300,
+    amplitude_range = c(10, 1000),
+    regulation_type = "up"
 ){
-  # Load 'dplyr' package if not already installed
+  # Soft-depend on dplyr (only if needed). This is fine for scripts, but
+  # avoid install-from-function in packages.
   if (!requireNamespace("dplyr", quietly = TRUE)) install.packages("dplyr")
   library(dplyr)
-  
-  # Generate pseudotime values from uniform distribution [0, 1], then centre
+
+  # Pseudotime ~ U(0,1), centred to mean 0 for nicer sigmoid midpoints
   pseudotime <- runif(n_timepoints, min = 0, max = 1)
   pseudotime <- pseudotime - mean(pseudotime)
-  
+
   # Number of DEGs
   k <- length(DEG_genes)
-  
-  # Assign regulation directions for each DEG
+
+  # Assign directions per DEG according to requested mode
   directions <- switch(
     regulation_type,
-    "up" = rep("up", k),
+    "up"   = rep("up", k),
     "down" = rep("down", k),
     "both" = sample(c("up", "down"), k, replace = TRUE),
-    stop("Invalid regulation_type")  # Throw error if invalid option
+    stop("Invalid regulation_type")
   )
-  
-  # Define sigmoid function for modelling DEG expression over pseudotime
-  sigmoid <- function(t, midpoint, slope, baseline = 0, 
+
+  # Sigmoid curve generator for DEGs with optional down-flip and noise
+  sigmoid <- function(t, midpoint, slope, baseline = 0,
                       amplitude = 100, noise_prop = 0.05, direction = "up") {
-    # Standard sigmoid curve
-    raw <- 1 / (1 + exp(-slope * (t - midpoint)))
-    
-    # Flip for downregulated genes
-    expr <- if (direction == "up") raw else 1 - raw
-    
-    # Scale and shift with baseline and amplitude
-    expr <- baseline + amplitude * expr
-    
-    # Add noise (Gaussian) proportional to amplitude
-    noise_sd <- amplitude * noise_prop
-    # Ensure non-negative values
-    pmax(rnorm(length(expr), mean = expr, sd = noise_sd), 0) 
+    raw <- 1 / (1 + exp(-slope * (t - midpoint)))   # logistic
+    expr <- if (direction == "up") raw else 1 - raw # flip for down-reg
+    expr <- baseline + amplitude * expr             # scale + shift
+    noise_sd <- amplitude * noise_prop              # noise ∝ amplitude
+    pmax(rnorm(length(expr), mean = expr, sd = noise_sd), 0) # non-negative
   }
-  
-  # Define random expression model for non-DEGs
+
+  # Simple background models for non-DEGs (varied but light-touch)
   random_expression <- function(t) {
-    # Random background type
-    type <- sample(c("flat", "normal", "lognormal"), 1)  
-    
+    type <- sample(c("flat", "normal", "lognormal"), 1)
+
     if (type == "flat") {
-      # Constant baseline with small noise
       base <- runif(1, 50, 300)
       noise_sd <- runif(1, 2, 8)
       return(pmax(rep(base, length(t)) + rnorm(length(t), 0, noise_sd), 0))
-      
+
     } else if (type == "normal") {
-      # Normally distributed expression with lower SD
       mean_expr <- runif(1, 50, 300)
       sd_expr <- runif(1, 5, 20)
       return(pmax(rnorm(length(t), mean = mean_expr, sd = sd_expr), 0))
-      
+
     } else {
-      # Log-normal expression, mild variance
+      # Lightly varying log-normal baseline
       return(pmax(rlnorm(length(t), meanlog = log(80), sdlog = 0.3), 0))
     }
   }
-  
-  # Initialise matrix to hold gene expression data
+
+  # Container: rows = timepoints, cols = genes
   gene_matrix <- matrix(NA, nrow = n_timepoints, ncol = n_genes)
-  
-  # Assign midpoints for sigmoid curves (DEG inflection points)
+
+  # DEG inflection points near centre to avoid edge artefacts
   midpoints <- runif(length(DEG_genes), -0.4, 0.4)
   names(midpoints) <- DEG_genes
-  
-  # Loop over all genes to simulate expression profiles
+
+  # Build each gene’s profile
   for (i in 1:n_genes) {
     if (i %in% DEG_genes) {
-      # For DEGs: use sigmoid function with randomised parameters
+      # Parametrise DEG sigmoid
       idx <- which(DEG_genes == i)
       direction <- directions[idx]
       amp <- runif(1, amplitude_range[1], amplitude_range[2])
       midpoint <- midpoints[i]
-      slope <- runif(1, 5, 50)
+      slope <- runif(1, 5, 50)               # steeper → sharper switch
       baseline <- runif(1, 10, 1000)
-      
-      # Generate DEG expression
-      gene_matrix[, i] <- sigmoid(pseudotime, midpoint, slope,
-                                  amplitude = amp, baseline = baseline, 
-                                  direction = direction)
+
+      gene_matrix[, i] <- sigmoid(
+        pseudotime, midpoint, slope,
+        amplitude = amp, baseline = baseline, direction = direction
+      )
     } else {
-      # For non-DEGs, simulate background expression
+      # Background expression for non-DEGs
       gene_matrix[, i] <- random_expression(pseudotime)
     }
   }
-  
-  # Convert expression matrix to data frame with pseudotim
+
+  # Label columns and return sorted by pseudotime (handy for plotting)
   colnames(gene_matrix) <- paste0("G", 1:n_genes)
   df <- data.frame(Pseudotime = pseudotime, gene_matrix)
-  
-  # Sort the dataset by pseudotime for smoother visualisation
   df <- df[order(df$Pseudotime), ]
-  
+
   return(df)
 }
 
 ################## simulate_target_from_expression #############################
-# This function simulates a target gene (or response variable) as a noisy 
-# linear combination of selected parent genes from an existing expression matrix.
-
-simulate_target_from_expression <- function(parent_genes, 
-                                            expression_matrix, 
-                                            noise_level  = 0.05
-                                            ) {
+#' Simulate a target (y) as a noisy linear mix of parent genes
+#'
+#' @param parent_genes Character vector; column names of parent genes in `expression_matrix`.
+#' @param expression_matrix data.frame/matrix with gene columns.
+#' @param noise_level Numeric in [0,1]; noise SD as a proportion of the signal SD.
+#' @return list with $result_df (original + y), and $param (parents/weights).
+simulate_target_from_expression <- function(parent_genes,
+                                            expression_matrix,
+                                            noise_level  = 0.05) {
   outcome <- list()
-  
-  # Validate input
+
+  # Basic input checks
   if (!all(parent_genes %in% colnames(expression_matrix))) {
     stop("Not all parent_genes are present in the expression matrix columns.")
   }
   if (!is.numeric(noise_level) || noise_level < 0 || noise_level > 1) {
-    stop("noise_proportion must be a number between 0 and 1.")
+    # (Note: error text said 'noise_proportion' in original; corrected here.)
+    stop("noise_level must be a number between 0 and 1.")
   }
 
-  
-  # Extract parent gene expression data
+  # Pull parent expression as matrix
   parents_matrix <- as.matrix(expression_matrix[, parent_genes, drop = FALSE])
-  
-  # Generate signal via weighted linear combination of parent genes
+
+  # Random signed weights with magnitudes in [0.2, 1]
   magnitude <- runif(ncol(parents_matrix), min = 0.2, max = 1)
   weights <- magnitude * sample(c(-1, 1), ncol(parents_matrix), replace = TRUE)
+
+  # Linear signal + Gaussian noise
   signal <- as.vector(parents_matrix %*% weights)
-  
-  # Add Gaussian noise proportional to the signal's SD
   signal_sd <- sd(signal)
-  noise_sd <- noise_level*signal_sd
+  noise_sd <- noise_level * signal_sd
   noise <- rnorm(length(signal), mean = 0, sd = noise_sd)
-  target <- signal + noise 
-  
-  # Ensure non-negative expression values
+  target <- signal + noise
+
+  # Shift to be non-negative (convenient for “expression-like” targets)
   target <- target + abs(min(target))
-  
-  # Store results
+
+  # Assemble output
   outcome$result_df <- as.data.frame(expression_matrix)
   outcome$result_df$y <- target
-  outcome$param$GE <- as.data.frame(cbind(parents_matrix,target))
+  outcome$param$GE <- as.data.frame(cbind(parents_matrix, target))
   outcome$param$weights <- weights
-  
+
   return(outcome)
 }
 
-
 ############################ evaluate_inferred_drivers ########################
-# This function evaluates how well inferred gene drivers match a 
-# set of true parent genes.
-# It returns a summary data frame showing how many true parents were recovered 
-# in the top inferred features, and includes scores and ranks for comparison.
-
+#' Compare inferred drivers to ground-truth parents
+#'
+#' Expects a `result` from run_dcdkm_test() containing $geneScore and
+#' $InferredDrivers. Summarises how many true parents appear in the top-N and
+#' an “extended” set (ties included) and reports parent scores.
+#'
+#' @param result List; output from run_dcdkm_test().
+#' @param true_parents Character vector; ground-truth parent gene IDs.
+#' @return data.frame with detection counts, thresholds, and score strings.
 evaluate_inferred_drivers <- function(result, true_parents) {
-  
-  # Check that required fields exist in the result object
-    if (!all(c("geneScore", "InferredDrivers") %in% names(result))) {
+
+  # Structure checks (fail fast with helpful errors)
+  if (!all(c("geneScore", "InferredDrivers") %in% names(result))) {
     stop("The result list must contain 'geneScore' and 'InferredDrivers'.")
   }
-  
-  # Extract gene features and inferred driver table
+
+  # Extract
   gene_features <- result$geneScore$features
   inferred_df <- result$InferredDrivers
-  
-  # Remove 'y' from the inferred drivers if present
+
+  # Exclude the target if present
   inferred_df <- subset(inferred_df, features != "y")
-  
-  # Identify which true parents were found in the feature list
+
+  # Partition truth into found/missing in the feature set
   found_parents <- true_parents[true_parents %in% gene_features]
   missing_parents <- setdiff(true_parents, gene_features)
-  
-  # Stop if no true parents were found in the feature list
+
   if (length(found_parents) == 0) {
     stop("None of the true parents were found in geneScore.")
   }
-  
-  # Issue a warning if any true parents were not found
   if (length(missing_parents) > 0) {
     warning(paste("These true parents are missing from geneScore:",
                   paste(missing_parents, collapse = ", ")))
   }
-  
-  # Sort inferred drivers by decreasing score (higher score = more likely driver)
+
+  # Rank inferred drivers by decreasing score
   inferred_df <- inferred_df[order(-inferred_df$score), ]
-  
-  # Determine number of top candidates to compare based on number of true parents
+
+  # Top-N = number of true parents
   n_parents <- length(true_parents)
   if (n_parents > nrow(inferred_df)) {
     stop("Number of true parents exceeds number of inferred drivers.")
   }
-  
-  # Identify the score threshold for top-n selection
+
+  # Threshold for top-N selection (handles ties at the boundary)
   top_cut_score <- inferred_df$score[n_parents]
-  
-  # Identify the score threshold for top-n selection
   top_set <- inferred_df$features[inferred_df$score >= top_cut_score]
-  
-  # Extended set: features with scores >= the max score *below* the cut-off
+
+  # Extended set threshold: include everything down to the highest score
+  # strictly below the top cut (effectively top set + one tie block below)
   lower_scores <- inferred_df$score[inferred_df$score < top_cut_score]
   extended_cut_score <- if (length(lower_scores) == 0) {
     min(inferred_df$score)
   } else {
     max(lower_scores)
   }
-  
   extended_set <- inferred_df$features[inferred_df$score >= extended_cut_score]
-  
-  # Evaluate recovery: how many true parents are in the top/extended sets
+
+  # Tally overlaps
   detected_top <- intersect(true_parents, top_set)
   detected_extended <- intersect(true_parents, extended_set)
   not_in_inferred <- setdiff(true_parents, inferred_df$features)
-  
-  # Extract scores for each true parent (or NA if missing)
+
+  # Collect per-parent scores (NA if absent)
   parent_scores <- sapply(true_parents, function(p) {
     score <- inferred_df$score[inferred_df$features == p]
     if (length(score) == 0) NA else score
   })
-  
-  # Format output strings for clarity
-  score_string <- paste(paste(names(parent_scores), 
-                              round(parent_scores, 4), sep = "="), 
+
+  # Human-readable strings
+  score_string <- paste(paste(names(parent_scores),
+                              round(parent_scores, 4), sep = "="),
                         collapse = "; ")
   top_hits_string <- paste(detected_top, collapse = ", ")
   extended_hits_string <- paste(detected_extended, collapse = ", ")
-  
-  #Create and return a summary data frame with evaluation metrics
+
+  # One-row summary
   summary_df <- data.frame(
     n_true_parents = length(true_parents),
     n_detected_in_top = length(detected_top),
@@ -247,27 +243,32 @@ evaluate_inferred_drivers <- function(result, true_parents) {
     parent_scores = score_string,
     stringsAsFactors = FALSE
   )
-  
+
   return(summary_df)
 }
 
-
 ########################plot_gene_simulation##################################
-plot_gene_simulation <- function(df, genes, 
+#' Quick plot of selected simulated genes over pseudotime
+#'
+#' @param df data.frame from simulate_gene_expression().
+#' @param genes Character vector of gene column names to plot.
+#' @param title Title string.
+#' @return ggplot object.
+plot_gene_simulation <- function(df, genes,
                                  title = "Simulated Gene Expression") {
-  # Check gene names exist
+  # Check requested genes exist
   missing <- setdiff(genes, colnames(df))
   if (length(missing) > 0) {
-    stop(paste("These genes are missing in the data frame:", 
+    stop(paste("These genes are missing in the data frame:",
                paste(missing, collapse = ", ")))
   }
-  
-  # Prepare long-format data for ggplot
+
+  # Long format for ggplot
   plot_data <- df[, c("Pseudotime", genes)]
-  plot_data <- tidyr::pivot_longer(plot_data, -Pseudotime, 
+  plot_data <- tidyr::pivot_longer(plot_data, -Pseudotime,
                                    names_to = "Gene", values_to = "Expression")
-  
-  # Plot
+
+  # Line plot per gene across pseudotime
   ggplot(plot_data, aes(x = Pseudotime, y = Expression, colour = Gene)) +
     geom_line(size = 1) +
     labs(title = title, y = "Expression", x = "Pseudotime") +
@@ -275,40 +276,44 @@ plot_gene_simulation <- function(df, genes,
 }
 
 ############################# run_dcdkm_test ############################
-# This function runs the Dynamic Cancer Driver KM (DCDKM) test on a our simulated
-# gene expression dataset over pseudotime. It identifies dynamic drivers  
-# of a target gene using model-based scoring with time-binning.
-
-run_dcdkm_test <- function(df, target = "y", covariate = NULL, 
+#' Run Dynamic Cancer Driver KM (DCDKM) on simulated data
+#'
+#' Bins pseudotime, enumerates/score models, and derives driver scores for
+#' predictors relative to a target gene. Returns ranked models and driver tables.
+#'
+#' @param df data.frame; first column is pseudotime, others are features incl. target.
+#' @param target Character; name of target column (default "y").
+#' @param covariate Optional; feature used for time binning. Defaults to first feature.
+#' @param nBins Integer; number of time bins.
+#' @param parallel Logical; enable parallel scoring if supported.
+#' @param verbose Logical; chatty progress.
+#' @return list with topModels, geneScore, InferredDrivers, formulas, modelScore.
+run_dcdkm_test <- function(df, target = "y", covariate = NULL,
                            nBins = 50, parallel = TRUE, verbose = TRUE) {
-  # --- Dependency checks and installation ---
-  # Ensure required packages are installed
-  
-  if (!requireNamespace("devtools", quietly = TRUE)) 
+  # --- Dependency setup -------------------------------------------------------
+  # Install on-the-fly if missing (OK for scripts; avoid inside packages/CI).
+  if (!requireNamespace("devtools", quietly = TRUE))
     install.packages("devtools")
-  if (!requireNamespace("tidyverse", quietly = TRUE)) 
+  if (!requireNamespace("tidyverse", quietly = TRUE))
     install.packages("tidyverse")
-  if (!requireNamespace("AMCBGeneUtils", quietly = TRUE)) 
+  if (!requireNamespace("AMCBGeneUtils", quietly = TRUE))
     devtools::install_github("AndresMCB/AMCBGeneUtils")
-  if (!requireNamespace("DynamicCancerDriverKM", quietly = TRUE)) 
+  if (!requireNamespace("DynamicCancerDriverKM", quietly = TRUE))
     devtools::install_github("AndresMCB/DynamicCancerDriverKM")
-  
-  # Load required packages
+
   library(DynamicCancerDriverKM)
   library(tidyverse)
   library(tictoc)
-  
-  # --- Feature preparation ---
-  Features <- colnames(df)[-1] # Exclude pseudotime (assumed first column)
-  predictors <- setdiff(Features, target) # All features except target
-  
-  
-  # Set covariate for time binning; default to first feature if not supplied
+
+  # --- Features/covariate -----------------------------------------------------
+  Features <- colnames(df)[-1]            # assume first col is pseudotime
+  predictors <- setdiff(Features, target)  # everything except target
+
   if (is.null(covariate)) {
-    covariate <- Features[1]  # use first gene as covariate if none given
+    covariate <- Features[1]               # default: first gene as covariate
   }
-  
-  # --- Bin pseudotime using DCDKM utility ---
+
+  # --- Time binning -----------------------------------------------------------
   binned <- DCDKM.BinTime(
     Mat1 = df[Features],
     covariate = covariate,
@@ -316,114 +321,104 @@ run_dcdkm_test <- function(df, target = "y", covariate = NULL,
     nBins = nBins,
     pTime = df[, 1] # pseudotime vector
   )
-  
-  # Initialise results container
+
+  # --- Model scoring ----------------------------------------------------------
   results <- vector(mode = "list", length = 0)
-  
-  if (verbose) {
-    message(paste("Running DCDKM for target gene:", target))
-  }
-  # --- Main DCDKM model scoring ---
-  tic() # Start timing
-  features <- c(target, predictors)  # Target + all predictors
-  k <- length(features)  # Total number of features
-  testModels <- DCDKM.GetModels(k)  # Get all possible models
-  
-  # Prepare object to store model scores and formulas
+  if (verbose) message(paste("Running DCDKM for target gene:", target))
+
+  tic()
+  features <- c(target, predictors)   # features vector starts with target
+  k <- length(features)
+  testModels <- DCDKM.GetModels(k)    # grouped model sets
+
   invariantScore <- list(score = NULL, formulas = NULL)
-  
-  # Evaluate each group of models returned by DCDKM.GetModels
+
+  # Score each group and accumulate
   for (j in seq_along(testModels)) {
     aux <- DCDKM.modelScoring(
       models = testModels[[j]],
       binned = binned,
       parallel = parallel,
       features = features,
-      targetIndex = 1,        # 'target' is the first in features vector
-      num.folds = 2           # Cross-validation folds
+      targetIndex = 1,   # target is first in 'features'
+      num.folds = 2
     )
-    # Store scores and formulas
     invariantScore$score <- c(invariantScore$score, aux$modelScores)
     invariantScore$formulas <- c(invariantScore$formulas, aux$formulas)
   }
-  
-  # --- Rank and extract top models ---
-  index <- order(invariantScore$score)  # Rank by score (ascending)
-  models <- unlist(testModels, recursive = FALSE)  # Flatten list of models
-  topModels <- models[index[1:k]]  # Select top k models
-  
-  # Score each gene (predictor) by its contribution across top models
-  geneScore <- driverScore(topModels, features)
-  
-  # Filter only predictors with non-zero score (likely drivers)
-  InferredDrivers <- geneScore %>% filter(score > 0)
-  
-  # --- Store and return results ---
+
+  # --- Rank/select top models and derive driver scores ------------------------
+  index <- order(invariantScore$score)          # lower is better
+  models <- unlist(testModels, recursive = FALSE)
+  topModels <- models[index[1:k]]               # keep top k
+  geneScore <- driverScore(topModels, features) # per-gene contribution
+  InferredDrivers <- geneScore %>% dplyr::filter(score > 0)
+
+  # --- Pack results -----------------------------------------------------------
   results$topModels <- topModels
   results$geneScore <- geneScore
   results$InferredDrivers <- InferredDrivers
   results$formulas <- invariantScore$formulas[index[1:k]]
   results$modelScore <- invariantScore$score[index[1:k]]
-  toc()  # End timing
-  
+  toc()
+
   return(results)
 }
 
-
-
 #########################calculate_detection_rates##############################
-# 
-# This function calculates how often a certain number of true parent genes
-# were detected in the 'top' and 'extended' inferred driver sets, based on
-# summary data (e.g., from evaluate_inferred_drivers output).
-
+#' Count detection frequencies across simulation runs
+#'
+#' For each possible detection count (n_true, n_true-1, ..., 0), tally how many
+#' runs achieved exactly that count in the top and extended sets.
+#'
+#' @param df data.frame from evaluate_inferred_drivers() row-binds.
+#' @param n_true_parents Integer; number of true parents (2 or 3 in your study).
+#' @return data.frame with rows per detection level and counts per set.
 calculate_detection_rates <- function(df, n_true_parents = 2) {
-  # Ensure the input dataframe has required columns
+  # Schema check
   required_cols <- c("n_true_parents", "n_detected_in_top", "n_detected_in_extended")
   if (!all(required_cols %in% colnames(df))) {
     stop("Dataframe must contain columns: n_true_parents, n_detected_in_top, n_detected_in_extended")
   }
-  
-  # Initialise counters for each detection level (from n to 0)
+
+  # Tally exact counts for top and extended sets
   top_stats <- NULL
   ext_stats <- NULL
-  
+
   for (i in n_true_parents:0) {
-    # Count how many rows had exactly 'i' true parents detected in top set
+    # Exactly i detections in the top set
     aux <- sum(df$n_detected_in_top == i)
     top_stats <- c(top_stats, aux)
-    
-    # Count how many rows had exactly 'i' true parents detected in extended set
+
+    # Exactly i detections in the extended set
     aux <- sum(df$n_detected_in_extended == i)
     ext_stats <- c(ext_stats, aux)
   }
-  
-  # Create result table: one row per detection count (n to 0)
+
+  # Assemble result; values are counts (you can convert to proportions later)
   result <- data.frame(
     metric = paste0("detected ", n_true_parents:0),
     Top_Percentage = top_stats,
     Extended_Percentage = ext_stats
   )
-  
+
   return(result)
 }
 
-########################pval_minimal_top############################
-
-# Compute a one-sided binomial tail p-value for "exact full recovery (minimal top)"
-# Assumptions:
-# - res_df comes from your calculate_detection_rates(...), where:
-#     * row 1 corresponds to "detected n" (i.e., exact full recovery),
-#     * column Top_Percentage holds the count of successes across N runs.
-# - G is the total number of candidate genes (default 20).
-# - n_true is the number of true drivers (2 or 3).
-# - N is the number of simulation runs (default 500).
-# - Under the null (random ranking wrt the true drivers), the per-run success
-#   probability is p0 = 1 / choose(G, n_true). We then test P(X >= k) with X~Bin(N, p0).
-
+########################pval_minimal_top#######################################
+#' Binomial tail p-value for exact full recovery in the top set
+#'
+#' Tests whether the observed number of “perfect” recoveries (all true parents
+#' in the minimal top set) exceeds what you'd expect from random ranking.
+#'
+#' @param res_df data.frame from calculate_detection_rates(); first row is “detected n”.
+#' @param n_true Integer; number of true drivers (2 or 3).
+#' @param G Integer; total candidate genes (default 20).
+#' @param N Integer; total runs (default 500).
+#' @return One-sided binomial upper-tail p-value, P[X >= k], X~Bin(N, p0).
 pval_minimal_top <- function(res_df, n_true, G = 20, N = 500) {
-  k  <- res_df$Top_Percentage[1]      # observed successes (exact full recovery) in N runs
-  p0 <- 1 / choose(G, n_true)         # null per-run success prob: 1 / C(G, n_true)
-  pbinom(k - 1, size = N, prob = p0,  # one-sided binomial upper tail
-         lower.tail = FALSE)          # returns P[X >= k]
+  k  <- res_df$Top_Percentage[1]     # observed perfect recoveries
+  p0 <- 1 / choose(G, n_true)        # null success prob: random top-n match
+  pbinom(k - 1, size = N, prob = p0, # P[X >= k]
+         lower.tail = FALSE)
 }
