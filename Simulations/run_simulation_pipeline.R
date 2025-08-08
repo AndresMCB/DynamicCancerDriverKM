@@ -1,4 +1,4 @@
-#' Run a simulated causal-inference pipeline over many experiments
+#' Run our causal-inference pipeline over many experiments with simulated gene expression
 #'
 #' Repeats a simulation where (1) gene expression is generated, (2) a target
 #' gene is simulated from specified parent genes, (3) a causal inference test
