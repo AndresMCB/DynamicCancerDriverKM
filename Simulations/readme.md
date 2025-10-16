@@ -1,6 +1,29 @@
 ## Simulations (In Silico Module)
 
 To complement real datasets, this repository includes an **in silico gene expression simulator** that generates dynamic datasets with *known* causal structure. This lets users benchmark method accuracy under controlled conditions (signal strength, noise, sparsity) and reproduce the figures/statistics discussed in the paper.
+### Folder structure
+
+```
+Simulations/
+├─ simulationFunctions.R          # Core generator: builds synthetic gene expression & truth
+├─ run_simulation_pipeline.R      # Orchestrates scenarios, replicates, summaries
+├─ SimulationExperiments.R        # ENTRY POINT to reproduce paper results (runs all scenarios)
+└─ save_simulation_results.R      # Internal helper used by our experiments to save outputs
+                                 # (not a generic saving utility)
+```
+
+### How to reproduce the paper results in R / RStudio (interactive)
+
+```r
+# From the repo root:
+source("Simulations/simulationFunctions.R")
+source("Simulations/run_simulation_pipeline.R")
+source("Simulations/SimulationExperiments.R")
+```
+
+**Notes**
+- Ensure your working directory is the **repository root** so the paths resolve.
+- `save_simulation_results.R` is an internal helper we used to save outputs; it’s **not** a generic saving utility.
 
 ### What it generates
 - **Expression matrices** (genes × samples) along a pseudotemporal trajectory.
@@ -27,28 +50,4 @@ To complement real datasets, this repository includes an **in silico gene expres
 
 *(These match the summary in the manuscript and are included so users know what to expect when running the default settings.)*
 
-This repository includes an **in silico gene expression simulator** used to benchmark the DynamicCancerDriverKM pipeline under controlled conditions (known causal truth, adjustable noise, regulation patterns, etc.). These simulations were added following a valuable reviewer suggestion and are part of the paper’s evaluation.
 
-### Folder structure
-
-```
-Simulations/
-├─ simulationFunctions.R          # Core generator: builds synthetic gene expression & truth
-├─ run_simulation_pipeline.R      # Orchestrates scenarios, replicates, summaries
-├─ SimulationExperiments.R        # ENTRY POINT to reproduce paper results (runs all scenarios)
-└─ save_simulation_results.R      # Internal helper used by our experiments to save outputs
-                                 # (not a generic saving utility)
-```
-
-### How to reproduce the paper results in R / RStudio (interactive)
-
-```r
-# From the repo root:
-source("Simulations/simulationFunctions.R")
-source("Simulations/run_simulation_pipeline.R")
-source("Simulations/SimulationExperiments.R")
-```
-
-**Notes**
-- Ensure your working directory is the **repository root** so the paths resolve.
-- `save_simulation_results.R` is an internal helper we used to save outputs; it’s **not** a generic saving utility.
